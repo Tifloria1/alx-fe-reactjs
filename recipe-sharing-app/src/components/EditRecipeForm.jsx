@@ -1,25 +1,30 @@
-// src/components/AddRecipeForm.jsx
-import { useState } from 'react';
+// src/components/EditRecipeForm.jsx
+import { useState, useEffect } from 'react';
 import { useRecipeStore } from './recipeStore';
 
-const AddRecipeForm = () => {
-  const addRecipe = useRecipeStore((state) => state.addRecipe);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+const EditRecipeForm = ({ recipe }) => {
+  const updateRecipe = useRecipeStore((state) => state.updateRecipe);
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  const [title, setTitle] = useState(recipe?.title || '');
+  const [description, setDescription] = useState(recipe?.description || '');
 
+  // keep local state in sync if recipe prop changes
+  useEffect(() => {
+    if (recipe) {
+      setTitle(recipe.title);
+      setDescription(recipe.description);
+    }
+  }, [recipe]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
     if (!title.trim() || !description.trim()) return;
 
-    addRecipe({
-      id: Date.now(),
+    updateRecipe({
+      ...recipe,
       title,
       description,
     });
-
-    setTitle('');
-    setDescription('');
   };
 
   return (
@@ -37,9 +42,9 @@ const AddRecipeForm = () => {
         placeholder="Description"
         style={{ display: 'block', marginBottom: '0.5rem', width: '100%' }}
       />
-      <button type="submit">Add Recipe</button>
+      <button type="submit">Save changes</button>
     </form>
   );
 };
 
-export default AddRecipeForm;
+export default EditRecipeForm;
