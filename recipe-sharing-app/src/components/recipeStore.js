@@ -1,31 +1,79 @@
 // src/components/recipeStore.js
-import { create } from 'zustand';
+import create from 'zustand';
 
 export const useRecipeStore = create((set) => ({
+  // All recipes
   recipes: [],
 
-  // add a new recipe
+  // Search + filtering state
+  searchTerm: '',
+  filteredRecipes: [],
+
+  // ---- CRUD ACTIONS ----
   addRecipe: (newRecipe) =>
     set((state) => ({
       recipes: [...state.recipes, newRecipe],
+      filteredRecipes: state.searchTerm
+        ? [...state.recipes, newRecipe].filter((recipe) =>
+            recipe.title
+              .toLowerCase()
+              .includes(state.searchTerm.toLowerCase())
+          )
+        : [...state.recipes, newRecipe],
     })),
 
-  // delete by id
   deleteRecipe: (id) =>
-    set((state) => ({
-      recipes: state.recipes.filter((recipe) => recipe.id !== id),
-    })),
+    set((state) => {
+      const newRecipes = state.recipes.filter((r) => r.id !== id);
+      return {
+        recipes: newRecipes,
+        filteredRecipes: state.searchTerm
+          ? newRecipes.filter((recipe) =>
+              recipe.title
+                .toLowerCase()
+                .includes(state.searchTerm.toLowerCase())
+            )
+          : newRecipes,
+      };
+    }),
 
-  // update an existing recipe
   updateRecipe: (updatedRecipe) =>
-    set((state) => ({
-      recipes: state.recipes.map((recipe) =>
+    set((state) => {
+      const update = (recipe) =>
         recipe.id === updatedRecipe.id
           ? { ...recipe, ...updatedRecipe }
-          : recipe
-      ),
-    })),
+          : recipe;
 
-  // optional: replace the list (we already had this behavior)
-  setRecipes: (recipes) => set({ recipes }),
+      const newRecipes = state.recipes.map(update);
+
+      return {
+        recipes: newRecipes,
+        filteredRecipes: state.searchTerm
+          ? newRecipes.filter((recipe) =>
+              recipe.title
+                .toLowerCase()
+                .includes(state.searchTerm.toLowerCase())
+            )
+          : newRecipes,
+      };
+    }),
+
+  // ---- SEARCH + FILTER ACTIONS ----
+  setSearchTerm: (term) => set({ searchTerm: term }),
+
+  filterRecipes: () =>
+    set((state) => {
+      const term = state.searchTerm.trim().toLowerCase();
+
+      // If search is empty, show all recipes
+      if (!term) {
+        return { filteredRecipes: state.recipes };
+      }
+
+      return {
+        filteredRecipes: state.recipes.filter((recipe) =>
+          recipe.title.toLowerCase().includes(term)
+        ),
+      };
+    }),
 }));
